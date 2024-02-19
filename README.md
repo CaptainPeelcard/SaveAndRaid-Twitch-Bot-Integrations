@@ -7,7 +7,7 @@ Save&Raid (S&R) is a multi-streamer relay marathon where our community of stream
 
 ## Streamer.Bot New Donation Action Trigger
 ### Import and Setup
-- Download the streamerbot_SaveAndRaid_DonationAlerts1.0.69.sb file
+- Download [streamerbot_SaveAndRaid_DonationAlerts1.0.69.sb](https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/blob/5215b1cbf6470ccdca520323dbe05f672818dc8e/streamerbot_SaveAndRaid_DonationAlerts1.0.69.sb)
 - In Streamer.Bot click on Import at the top
 - Drag the file onto the Input String box, or open it then copy and paste the text.
 
@@ -71,7 +71,7 @@ Save&Raid (S&R) is a multi-streamer relay marathon where our community of stream
 
 ## SAMMI New Donation Action Trigger
 ### Import and Setup
-- Download the SAMMI_SaveAndRaid_NewDonations.1.0.69.txt file, open and all the text.
+- Download [SAMMI_SaveAndRaid_NewDonations.1.0.69.txt](https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/blob/5215b1cbf6470ccdca520323dbe05f672818dc8e/SAMMI_SaveAndRaid_NewDonations.1.0.69.txt)
 - In SAMMI Click Paste Deck
 - Double click the new deck to edit it
 - Double click the New Donation Button
