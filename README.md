@@ -7,7 +7,8 @@ Save&Raid (S&R) is a multi-streamer relay marathon where our community of stream
 
 ## Streamer.Bot New Donation Action Trigger
 ### Import and Setup
-- Download [streamerbot_SaveAndRaid_DonationAlerts.sb](https://raw.githubusercontent.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/f8e5702072240a11f012241a5edb4744937e823e/streamerbot_SaveAndRaid_DonationAlerts.sb)
+- Download
+  <a href="https://raw.githubusercontent.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/f8e5702072240a11f012241a5edb4744937e823e/streamerbot_SaveAndRaid_DonationAlerts.sb" download>streamerbot_SaveAndRaid_DonationAlerts.sb</a>
 - In Streamer.Bot click on Import at the top
 - Drag the file onto the Input String box, or open it then copy and paste the text.
 
