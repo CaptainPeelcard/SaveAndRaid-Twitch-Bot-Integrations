@@ -1,4 +1,4 @@
-# SAVE AND TWITCH BOT INTEGRATIONS
+# SAVE AND RAID TWITCH BOT INTEGRATIONS
 ## What is this?
 These are a collection of imports for specific local Twitch Bot applications that are used by broadcasters streaming to Twitch.
 
