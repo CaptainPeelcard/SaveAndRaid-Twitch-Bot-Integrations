@@ -2,6 +2,9 @@
 ## What is this?
 These are a collection of imports for specific local Twitch Bot applications that are used by broadcasters streaming to Twitch.
 
+### What is Save and Raid?
+Save&Raid (S&R) is a multi-streamer relay marathon where our community of streamers, over the course of a weekend, works in turns to complete a game series by playing for one hour each, then passing along the save files and viewers to the next streamer in the list, through the use of Twitch raids. We raise money for suicide prevention each year through Suicide Awareness Voices of Education (SAVE).
+
 ## Streamer.Bot New Donation Action Trigger
 ### Import and Setup
 - Download the streamerbot_SaveAndRaid_DonationAlerts1.0.69.sb file
