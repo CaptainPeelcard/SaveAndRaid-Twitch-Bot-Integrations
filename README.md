@@ -19,7 +19,7 @@ Save&Raid (S&R) is a multi-streamer relay marathon where our community of stream
   
 - Close streamer.bot and reopen it so the custom trigger gets added correctly.
 - Add the timed action to the timed action trigger
-  - Select the Action "$Code_SaveAndRaid_Donations"
+  - Select the Action "$Code_SaveAndRaid_Donations" under Actions in the Actions tab
   - Go to Triggers on the upper right and double click the Timed Trigger Action
   - Select Create Timer
     
@@ -41,6 +41,12 @@ Save&Raid (S&R) is a multi-streamer relay marathon where our community of stream
   - You can double click each command and adjust access permissions. Moderators have already been added to allowed.
     
     <img src="https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/assets/134344260/c16ae5ed-5ecd-4764-b90e-61c60de046a2" width="400">
+
+  - Select the Timer we created in the "! Start_DonationTriggers" and "! Stop_DonationTriggers" Actions
+      - Find the action in the Actions on the left under the Actions tab
+      - In the Sub-Actions, double click the Timer sub action, and select "S&R_Donation_Poll"
+        ![image](https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/assets/134344260/67efcad1-5eb7-4039-9812-85c3b79baf1d)
+
 
 
 ### Usage
