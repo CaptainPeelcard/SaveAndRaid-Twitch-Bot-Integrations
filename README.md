@@ -8,7 +8,7 @@ These are a collection of imports for specific local Twitch Bot applications tha
 - In Streamer.Bot click on Import at the top
 - Drag the file onto the Input String box, or open it then copy and paste the text.
 
-  ![image](https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/assets/134344260/42e497a9-77ad-4054-8f58-5af3ea2eabc9)
+  <img src="https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/assets/134344260/42e497a9-77ad-4054-8f58-5af3ea2eabc9" width="400">
   
 - Click OK. You will be prompted that you need to enable the commmands. These commands are optional, streamerbot will automatically start listening for new donations when it connects to OBS! It will keep listening for alerts even if OBS closes though.
 
@@ -36,4 +36,4 @@ These are a collection of imports for specific local Twitch Bot applications tha
   - Right click both commands under the SaveAndRaid Group and select "Enabled"
   - You can double click each command and adjust access permissions. Moderators have already been added to allowed.
     
-    ![image](https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/assets/134344260/c16ae5ed-5ecd-4764-b90e-61c60de046a2)
+    <img src="https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/assets/134344260/c16ae5ed-5ecd-4764-b90e-61c60de046a2" width="400">
