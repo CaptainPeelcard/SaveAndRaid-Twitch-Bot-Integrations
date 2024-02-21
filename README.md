@@ -60,9 +60,9 @@ Save&Raid (S&R) is a multi-streamer relay marathon where our community of stream
   <img src="https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/assets/134344260/be54f68f-17cf-40a7-a9ec-532a73eea1a7" width="400">
   
 - When the action occurs, you can access the donation info with these variables
-    - DonationName
-    - DonationAmount
-    - DonationMessage
+    - donationName
+    - donationAmount
+    - donationMessage
       
     ![image](https://github.com/CaptainPeelcard/SaveAndRaid-Twitch-Bot-Integrations/assets/134344260/b360e54d-551e-4617-800b-fadbb557b7a6)
 
