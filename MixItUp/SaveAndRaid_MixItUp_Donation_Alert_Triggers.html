@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Save And Raid - MixItUp Donation Triggers</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+        input::placeholder {
+            font-weight: bold !important;
+            opacity: 0.5 !important;
+            color: var(--bs-gray) !important;
+        }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script defer>
+        let ip;
+        let port;
+        let commands;
+        let donationCommandId;
+        let alertCount = 0;
+        let subscribed = false;
+
+        $(document).ready(async () => {
+            $("#connectForm").find("[name=miu_ip]").val(localStorage.getItem("miu_ip") === null
+                ? $("#connectForm").find("[name=miu_ip]").val()
+                : localStorage.getItem("miu_ip"));
+            $("#connectForm").find("[name=miu_port]").val(localStorage.getItem("miu_port") === null
+                ? $("#connectForm").find("[name=miu_port]").val()
+                : localStorage.getItem("miu_port"));
+
+            $("#connectForm").find("[name=rememberMe]")[0].checked = localStorage.getItem("rememberMe") === null
+                ? false
+                : localStorage.getItem("rememberMe").toLowerCase() === "true";
+            $("#connectForm").find("[name=autoConnect]")[0].checked = localStorage.getItem("autoConnect") === null
+                ? false
+                : localStorage.getItem("autoConnect").toLowerCase() === "true";
+
+            if (!$("#connectForm").find("[name=rememberMe]")[0].checked) {
+                $("#connectForm").find("[name=autoConnect]")[0].checked = false;
+                $("#connectForm").find("[name=autoConnect]")[0].readOnly = true;
+                $("#connectForm").find("[name=autoConnect]")[0].disabled = true;
+                $("#commandSelectForm").find("[name=autoStart]")[0].disabled = true;
+                $("#commandSelectForm").find("[name=autoStart]")[0].readOnly = true;
+            }
+
+            $("#connectForm").on("submit", async (event) => {
+                event.preventDefault();
+
+                let buttons = $(event.target).find("button");
+                let controls = $(event.target).find("input")
+                $(buttons).each((index, button) => {button.disabled = true});
+                $(controls).each((index, control) => {
+                    control.readOnly = true;
+                    control.disabled = true;
+                });
+
+                $("#spinner").removeClass("d-none");
+
+                ip = $(event.target).find("[name=miu_ip]").val();
+                port = $(event.target).find("[name=miu_port]").val();
+                
+                try {
+                    commands = await RefreshCommands(ip, port);
+
+                    if (commands.length > 0) {
+                        $(event.target).addClass("d-none");
+                        $("#commandSelectForm").removeClass("d-none");
+                        $("#commandSelectForm").find("[name=autoStart]")[0].checked = localStorage.getItem("autoStart") === null
+                            ? false
+                            : localStorage.getItem("autoStart").toLowerCase() === "true";
+
+                        if (localStorage.getItem("rememberMe").toLowerCase() === "true") {
+                            localStorage.setItem("miu_ip", ip);
+                            localStorage.setItem("miu_port", port);
+                        }
+                    }
+                } catch {
+                    $(buttons).each((index, button) => {button.disabled = false});
+                    $(controls).each((index, control) => {
+                        control.readOnly = false;
+                        control.disabled = false;
+                    });
+                }
+
+                $("#spinner").addClass("d-none");
+            });
+
+            $("#commandSelectForm").on("submit", (event) => {
+                event.preventDefault();
+                let buttons = $(event.target).find("button");
+                let controls = $(event.target).find("select");
+                let checkboxes = $(event.target).find("input");
+                $(buttons).each((index, button) => {
+                    if (button.name === "StopDonations" || button.name === "exit")
+                        button.disabled = false;
+                    else
+                        button.disabled = true;
+                });
+                controls.each((index, control) => {
+                    control.readOnly = true;
+                    control.disabled = true;
+                });
+                $(checkboxes).each((index, checkbox) => {
+                    checkbox.disabled = true;
+                    checkboxes.readOnly = true;
+                });
+
+                donationCommandId = $(event.target).find("[name=commandList]").val();
+
+                if (localStorage.getItem("rememberMe") !== null && localStorage.getItem("rememberMe").toLowerCase() === "true")
+                    localStorage.setItem("miu_commandId", donationCommandId);
+
+                subscribed = true;
+                StartDonationTriggers(donationCommandId, SendDonationAlerts);
+            });
+
+            if (localStorage.getItem("autoConnect") !== null && localStorage.getItem("autoConnect").toLowerCase() === "true")
+                $("#connectForm").submit();
+        });
+
+        function Logout() {
+            $("#commandSelectForm").find("[name=commandType]").empty();
+            $("#commandSelectForm").find("[name=commandGroup]").empty();
+            $("#commandSelectForm").find("[name=commandList]").empty();
+            localStorage.setItem("autoConnect", false);
+            window.location.reload();
+        }
+
+        function EnableStoreSettings(checkBox) {
+            if (checkBox.checked) {
+                $("#connectForm").find("[name=autoConnect]")[0].disabled = false;
+                $("#connectForm").find("[name=autoConnect]")[0].readOnly = false;
+                $("#commandSelectForm").find("[name=autoStart]")[0].disabled = false;
+                $("#commandSelectForm").find("[name=autoStart]")[0].readOnly = false;
+            } else {
+                $("#connectForm").find("[name=autoConnect]")[0].checked = false;
+                $("#connectForm").find("[name=autoConnect]")[0].disabled = true;
+                $("#connectForm").find("[name=autoConnect]")[0].readOnly = true;
+                $("#commandSelectForm").find("[name=autoStart]")[0].disabled = true;
+                $("#commandSelectForm").find("[name=autoStart]")[0].readOnly = true;
+            }
+        }
+
+        function StoreSetting(checkbox) {
+            localStorage.setItem(checkbox.name, checkbox.checked);
+
+            if (checkbox.name === "rememberMe" && checkbox.checked === false) {
+                localStorage.removeItem("miu_ip");
+                localStorage.removeItem("miu_port");
+                localStorage.removeItem("miu_commandId");
+                localStorage.removeItem("autoConnect");
+                localStorage.removeItem("autoStart");
+                localStorage.removeItem("rememberMe");
+            }
+                
+        }
+
+        async function RefreshCommands(ip, port) {
+            try {
+                let response = await fetch(`http://${ip}:${port}/api/v2/commands?pageSize=1000`);
+
+                if (response.status !== 200)
+                    throw new Error("Failed to connect to MixItUp Local Developer API");
+
+                let commandsJson = await response.text();
+                let fetchCommmands = JSON.parse(commandsJson)["Commands"];
+
+                if (fetchCommmands.length > 0) {
+                    let distinctTypeNames = UniqueByProperty(fetchCommmands, "Type");
+                    let distinctGroupNames = UniqueByProperty(fetchCommmands, "GroupName");
+                    let typeSelect = $("#commandSelectForm").find("[name=commandType]")[0];
+                    let groupSelect = $("#commandSelectForm").find("[name=commandGroup]")[0];
+                    let commandSelect = $("#commandSelectForm").find("[name=commandList]")[0];
+                    $(typeSelect).empty();
+                    $(groupSelect).empty();
+                    $(commandSelect).empty();
+                    $(typeSelect).append($("<option>").attr({"value":""}).text("All"));
+                    distinctTypeNames.forEach(typeName => {
+                        $(typeSelect).append($("<option>").attr("value", typeName).text(typeName))
+                    });
+                    $(groupSelect).append($("<option>").attr({"value":""}).text("All"));
+                    $(groupSelect).append($("<option>").attr({"value":"Ungrouped"}).text("Ungrouped"));
+                    distinctGroupNames.forEach(group => {
+                        $(groupSelect).append($("<option>").attr("value", group).text(group))
+                    });
+                    fetchCommmands.forEach(command => {
+                        $("#commandSelectForm").find("[name=commandList]").append(
+                            $("<option>").attr("value", command["ID"]).text(command["Name"])
+                        )
+                    });
+                }
+
+                $("#commandSelectForm")[0].reset();
+                if (localStorage.getItem("miu_commandId") !== null) {
+                    $("#commandSelectForm").find(`[value=${localStorage.getItem("miu_commandId")}]`)[0].selected = true;
+                }
+
+                if (localStorage.getItem("autoStart") !== null && localStorage.getItem("autoStart").toLowerCase() === "true"
+                        && localStorage.getItem("miu_commandId") !== null)
+                    $("#commandSelectForm").submit();
+                return fetchCommmands;
+            } catch (error) {
+                alert("Failed to get Commands. Verify IP and Port are correct and ensure Mix It Up is running, and that the Developer API is enabled. Menu > Services > Developer API > Connect");
+            }
+        }
+
+        function FilterCommands() {
+            let type = $("#commandSelectForm").find("[name=commandType]")[0];
+            let group = $("#commandSelectForm").find("[name=commandGroup]")[0];
+            let filteredCommands;
+            
+            if ($(type).val() !== "" && $(group).val() !== "")
+                filteredCommands = commands.filter( ({GroupName, Type}) => Type === $(type).val() && GroupName === ($(group).val() === "Ungrouped" ? null : $(group).val() ));
+            else if ($(type).val() !== "")
+                filteredCommands = commands.filter( ({Type}) => Type === $(type).val());
+            else if ($(group).val() !== "")
+                filteredCommands = commands.filter( ({GroupName}) => GroupName === ($(group).val() === "Ungrouped" ? null : $(group).val() ));
+            else
+                filteredCommands = commands;
+
+            $("#commandSelectForm").find("[name=commandList]").empty();
+                filteredCommands.forEach(command => {
+                $("#commandSelectForm").find("[name=commandList ]").append(
+                    $("<option>").attr("value", command["ID"]).text(command["Name"])
+                )
+            });
+        }
+
+        function UniqueByProperty(array, property) {
+            filteredArray = array.reduce((uniqueArray, currentItem) => {
+                    // Check if the property value of the current item is already in the unique array
+                const isUnique = !uniqueArray.some(item => item[property] === currentItem[property]);
+            
+                if (isUnique) {
+                    uniqueArray.push(currentItem);
+                }
+            
+                return uniqueArray;
+            }, []);
+
+            return $.map(filteredArray, (item => item[property]));
+        }
+
+            // Send new donations to MixItUp donation command.
+        async function SendDonationAlerts(commandId, donations) {
+            donations.reverse();
+            let exitEarly = false;
+            $(donations).each((index, donation) => {
+                let response = fetch(`http://localhost:8911/api/v2/commands/${commandId}?pageSize=1000`, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        Platform: "Twitch",
+                        Arguments: `${donation["donor_name"].toString()} ${donation["amount"].toString()} $${donation["amount"].toString()} ${donation["donor_comment"].toString()}`
+                    }),
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                }).then(responseStatus => {
+                    if (responseStatus.status === 404) {
+                        StopDonationTriggers();
+                        localStorage.setItem("autoStart", false);
+                        localStorage.removeItem("miu_commandId");
+                        alertCount++;
+                        if (alertCount <= 1)
+                            alert("Invalid Command Selected.");
+                        window.location.reload();
+                        return false;
+                    }
+                });
+            });
+        }
+
+        function StopDonationTriggers() {
+            subscribed = false;
+            let buttons = $("#commandSelectForm").find("button");
+            let controls = $("#commandSelectForm").find("select");
+            let checkboxes = $("#commandSelectForm").find("input");
+            $(buttons).each((index, button) => {
+                if (button.name === "StopDonations")
+                    button.disabled = true;
+                else
+                    button.disabled = false;
+            });
+            $(controls).each((index, control) => {
+                control.readOnly = false;
+                control.disabled = false;
+            });
+            $(checkboxes).each((index, checkbox) => {
+                checkbox.readOnly = false;
+                checkbox.disabled = false;
+            })
+        }
+
+            // Subscribe to donations API and refresh every 1 seconds. Queue alerts if there are new donations.
+        async function StartDonationTriggers(commandId, callback, lastMessage = "", lastDonation = null) {
+            if (subscribed === false)
+                return;
+
+            let response = await fetch("https://api.saveandraid.org/donations.php?key=iE9yW1yP0oF5bV4pY8oW1yH6zE7gG7qN&limit=25");
+
+            if (response.status === 502) {
+                    // Status 502 is a connection timeout error.
+                await SubscribeDonations(commandId, callback, lastMessage, lastDonation);
+            } else if (response.status !== 200) {
+                    // An error, send it to the console.
+                console.log(response.statusText);
+                    // Reconnect in one second.
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                await SubscribeDonations(commandId, callback, lastMessage, lastDonation);
+            } else {
+                    // Get and process the message.
+                let message = await response.text();
+                
+                let newestDonation = lastDonation === null
+                    ? null
+                    : lastDonation;
+
+                    // Process if data has changed.
+                if (message !== lastMessage) {
+                    let donations = JSON.parse(message).data;
+
+                        // Get the newest donation for keeping position.
+                    newestDonation = donations.length === 0
+                        ? null
+                        : donations[0];
+
+                        // Set lastDonation to newestDonation on the first run.
+                    lastDonation = lastDonation === null
+                        ? newestDonation
+                        : lastDonation;
+
+                        // Look for alerts with newer date.
+                    newAlerts = donations.filter( ({ created }) => Date.parse(created) > Date.parse(lastDonation.created) );
+                        // Send the new donations if there are any
+                    if (newAlerts.length > 0)
+                        callback(commandId, newAlerts);
+                }
+
+                    // Subscribe again to get the next message.
+                if (subscribed === true) {}
+                    await setTimeout(() => {StartDonationTriggers(commandId, callback, message, newestDonation)}, 1000);
+            }
+        }
+    </script>
+</head>
+<body class="overflow-hidden vw-100 vh-100 d-flex justify-content-center align-items-center">
+    <div id="spinner" class="d-none position-absolute top-50 start-50 translate-middle">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <form id="connectForm" class="text-light bg-black py-2 px-3 w-75">
+        <div class="row form-row">
+            <div class="form-group col-12 col-sm-9">
+                <label for="miu_ip">IP Address</label>
+                <input type="text" name="miu_ip" class="form-control text-bg-dark" placeholder="localhost" value="localhost">
+                <small id="iphelp" class="row form-row form-text text-light-emphasis m-1">Enter localhost for MixItUp on the same computer.</small>
+            </div>
+            <div class="form-group col-12 col-sm-3">
+                <label for="miu_port">Port</label>
+                <input type="number" name="miu_port" class="form-control text-bg-dark" placeholder="8911" value="8911">
+            </div>
+            <div class="form-check mx-3">
+                <input type="checkbox" name="rememberMe" onchange="{EnableStoreSettings(this); StoreSetting(this)}" class="form-check-input">
+                <label class="form-check-label" for="rememberMe">
+                    Remember Me
+                </label>
+            </div>
+            <div class="form-check mx-3">
+                <input type="checkbox" name="autoConnect" onchange="StoreSetting(this)" class="form-check-input">
+                <label class="form-check-label" for="autoConnect">
+                    Automatically Connect
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" name="connect" class="btn btn-success">Connect</button>
+    </form>
+
+    <form id="commandSelectForm" class="d-none text-light bg-black w-75">
+        <div class="statusBar row form-row m-0 p-0 text-bg-dark">
+            <div class="col d-flex justify-content-end mx-0 p-0">
+                <button type="button" name="refreshCommands" title="Refresh Commands" onclick="RefreshCommands(ip, port)" class="btn btn-primary rounded-0 px-2 py-1 m-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
+                        <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
+                    </svg>
+                </button>
+                <button type="reset" name="exit" title="Disconnect" onclick="Logout()" class="btn btn-danger rounded-0 px-2 py-1 m-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/>
+                        <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="pt-0 pb-1 px-1 m-2">            
+            <div class="row form-row my-2">
+                <div class="form-group">
+                    <label for="commandType">Command Type</label>
+                    <select name="commandType" onchange="FilterCommands()" class="form-select text-bg-dark"></select>
+                </div>
+                <div class="form-group my-2">
+                    <label for="commandGroup">Command Group</label>
+                    <select name="commandGroup" onchange="FilterCommands()" class="form-select text-bg-dark"></select>
+                </div>
+                <div class="form-group my-2">
+                    <label for="command">Select Command</label>
+                    <select name="commandList" class="form-select text-bg-dark"></select>
+                </div>
+            </div>
+            <div class="row form-row">
+                <div class="col-12 col-sm-6">
+                    <button type="submit" name="StartDonations" class="col-12 col-sm-3 btn btn-success me-2">Start</button>
+                    <button type="button" name="StopDonations" onclick="StopDonationTriggers()" class="col-12 col-sm-3 btn btn-danger me-2" disabled>Stop</button>
+                </div>
+                <div class="col-12 col-sm-6 d-flex justify-content-end align-items-center">
+                    <div class="form-check">
+                        <input type="checkbox" name="autoStart" onchange="StoreSetting(this)" class="form-check-input">
+                        <label class="form-check-label" for="autoStart">
+                            Auto-start On Connect
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</body>
+</html>
